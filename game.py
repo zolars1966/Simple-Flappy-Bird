@@ -1,82 +1,87 @@
-from random import randint
+import pygame as pg
+import sys
+import time
 from globals import *
+from game import *
 
 
-class Bird:
-	def __init__(self, color=(220, 220, 0)):
-		self.alive = True
-		self.color = color
-		self.vel = -HEIGHT
-		self.height = H_HEIGHT
-		self.x = WIDTH // 3
-		self.radius = WIDTH // 15
+# Keyboard keys checking
+def check_pressed():
+    keys = pg.key.get_pressed()
 
-	def update(self, ground, dt):
-		self.vel += g * dt
-		self.height = min(self.height + self.vel * dt, ground - self.radius)
-
-		if not self.alive: self.color = (120, 120, 120)
-		else: self.color = (220, 220, 0)
+    if True in keys:
+        pass
 
 
-class Pipe:
-	def __init__(self, color=(0, 200, 0), x=WIDTH):
-		self.color = color
-		self.x = x
-		self.height = randint(HEIGHT // 5 * 2, HEIGHT // 5 * 4)
-		self.width = WIDTH // 4
-		self.gap = HEIGHT // 4
-		self.passed = False
+if __name__ == "__main__":
+    # creating a pygame window
+    screen = pg.display.set_mode(SIZE)
+    clock = pg.time.Clock()
+    title = "$~ FlappyBird Points: "
 
-	def update(self, speed, dt):
-		self.x -= speed * dt
+    env = Environment()
+  
+    vert_ticks, upd_time = pg.time.get_ticks(), time.perf_counter_ns()
+    pause = True
 
-		if self.x <= - WIDTH // 4:
-			self.x = WIDTH+WIDTH//4
-			self.height = randint(HEIGHT // 5 * 2, HEIGHT // 5 * 4)
-			self.passed = False
+    pg.display.set_icon(pg.image.load("icon.png"))
 
+    for _ in range(2):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                exit()
 
-class Environment:
-	def __init__(self, speed=WIDTH//3):
-		self.Bird = Bird()
-		self.Pipe1, self.Pipe2 = Pipe(), Pipe(x=WIDTH+H_WIDTH+WIDTH//4)
-		self.speed = speed
-		self.points = 0
-		self.ground = False
-		self.ground_height = HEIGHT // 6 * 5
-		self.ground_color = (128, 64, 48)
+        pg.display.flip()
 
-	def update(self, dt):
-		self.Bird.update(self.ground_height, dt)
-		self.collide()
+    # main cycle
+    while True:
+        # game environment updating (with vertical synchronization)
+        if (N_DELTA_TIME <= time.perf_counter_ns() - upd_time) and not pause:
+            upd_time = time.perf_counter_ns()
 
-		if self.Bird.alive:
-			self.Pipe1.update(self.speed, dt)
-			self.Pipe2.update(self.speed, dt)
-		
+            # calling for game environment to update
+            env.update(float(dt))
 
-	def collide(self):
-		if self.Bird.alive:
-			if self.Bird.x >= self.Pipe1.x and self.Bird.x <= self.Pipe1.x + self.Pipe1.width:
-				if self.Bird.height + self.Bird.radius >= self.Pipe1.height or \
-				   self.Bird.height - self.Bird.radius <= self.Pipe1.height - self.Pipe1.gap:
-					self.Bird.alive = False
-			elif self.Bird.x > self.Pipe1.x + self.Pipe1.width and not self.Pipe1.passed:
-				self.Pipe1.passed = True
-				self.points += 1
+        # game Assets/UI/elements drawing
+        if FPS_DT <= pg.time.get_ticks() - vert_ticks:
+            # checking for keyboard, window, mouse inputs or events
+            for event in pg.event.get():
+                if event.type == pg.QUIT: 
+                    exit()
 
-			if self.Bird.x >= self.Pipe2.x and self.Bird.x <= self.Pipe2.x + self.Pipe2.width:
-				if self.Bird.height + self.Bird.radius >= self.Pipe2.height or \
-				   self.Bird.height - self.Bird.radius <= self.Pipe2.height - self.Pipe2.gap:
-					self.Bird.alive = False
-			elif self.Bird.x > self.Pipe2.x + self.Pipe2.width and not self.Pipe2.passed:
-				self.Pipe2.passed = True
-				self.points += 1
+                if event.type == pg.KEYDOWN:
+                    if event.key in (pg.K_SPACE, pg.K_UP):
+                    	pause = False
+                    	
+                    	if env.ground:
+                    		env = Environment()
+                    		pause = True
+                    	elif env.Bird.alive: env.Bird.vel = -HEIGHT
 
-			if self.Bird.height - self.Bird.radius <= 0:
-				self.Bird.alive = False
-		
-		if self.Bird.height + self.Bird.radius >= self.ground_height:
-			self.Bird.alive = False
-			self.ground = True
+            vert_ticks = pg.time.get_ticks()
+
+            # drawing graphics
+
+            screen.fill((135, 206, 235))
+
+            # Pipe 1
+            pg.draw.rect(screen, env.Pipe1.color, (env.Pipe1.x, env.Pipe1.height, env.Pipe1.width, HEIGHT - env.Pipe1.height))
+            pg.draw.rect(screen, env.Pipe1.color, (env.Pipe1.x, 0, env.Pipe1.width, env.Pipe1.height - env.Pipe1.gap))
+
+            # Pipe 2
+            pg.draw.rect(screen, env.Pipe2.color, (env.Pipe2.x, env.Pipe2.height, env.Pipe2.width, HEIGHT - env.Pipe2.height))
+            pg.draw.rect(screen, env.Pipe2.color, (env.Pipe2.x, 0, env.Pipe2.width, env.Pipe2.height - env.Pipe2.gap))
+
+            # Ground
+            pg.draw.rect(screen, env.ground_color, (0, env.ground_height, WIDTH, HEIGHT - env.ground_height))
+
+            # Bird (Player)
+            pg.draw.circle(screen, env.Bird.color, (env.Bird.x, env.Bird.height), env.Bird.radius)
+
+            # cheking keys
+            check_pressed()
+
+            pg.display.set_caption(title + str(env.points) + " ~fps: " + str(round(clock.get_fps(), 2)))
+
+            pg.display.flip()
+            clock.tick()
