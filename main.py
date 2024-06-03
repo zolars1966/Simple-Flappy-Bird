@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # creating a pygame window
     screen = pg.display.set_mode(SIZE)
     clock = pg.time.Clock()
-    title = "$~ FlappyBird"
+    title = "$~ FlappyBird Points: "
 
     env = Environment()
   
@@ -81,7 +81,7 @@ if __name__ == "__main__":
             # cheking keys
             check_pressed()
 
-            pg.display.set_caption(title + " Points: " + str(env.points) + " ~fps: " + str(round(clock.get_fps(), 2)))
+            pg.display.set_caption(title + str(env.points) + " ~fps: " + str(round(clock.get_fps(), 2)))
 
             pg.display.flip()
             clock.tick()
