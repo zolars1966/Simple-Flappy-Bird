@@ -6,7 +6,7 @@ import sys
 
 
 # global references
-W_SCALE = 50
+W_SCALE = 80
 try:
     SIZE = WIDTH, HEIGHT = int(sys.argv[1]), int(sys.argv[2])
 except IndexError:

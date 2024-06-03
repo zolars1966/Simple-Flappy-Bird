@@ -5,22 +5,31 @@ from globals import *
 class Bird:
 	def __init__(self, color=(220, 220, 0)):
 		self.alive = True
-		self.color = color
-		self.vel = -HEIGHT
+		# self.color = color
+		self.vel = 0 #-HEIGHT
 		self.height = H_HEIGHT
 		self.x = WIDTH // 3
 		self.radius = WIDTH // 15
+		self.state = 0
 
-	def update(self, ground, dt):
-		self.vel += g * dt
-		self.height = min(self.height + self.vel * dt, ground - self.radius)
+	def update(self, ground, on_ground, dt):
+		if not on_ground:
+			self.vel += g * dt
+			self.height = min(self.height + self.vel * dt, ground - self.radius)
 
-		if self.height < self.radius:
-			self.height = self.radius
-			self.vel = 0
+			if self.height < self.radius:
+				self.height = self.radius
+				self.vel = 0
 
-		if not self.alive: self.color = (120, 120, 120)
-		else: self.color = (220, 220, 0)
+			# if not self.alive: self.color = (120, 120, 120)
+			# else: self.color = (220, 220, 0)
+
+			if self.vel >= -1 and self.vel <= 1:
+				self.state = 1
+			elif self.vel > 0:
+				self.state = 0
+			else:
+				self.state = 2
 
 
 class Pipe:
@@ -52,7 +61,7 @@ class Environment:
 		self.ground_color = (128, 64, 48)
 
 	def update(self, dt):
-		self.Bird.update(self.ground_height, dt)
+		self.Bird.update(self.ground_height, self.ground, dt)
 		self.collide()
 
 		if self.Bird.alive:

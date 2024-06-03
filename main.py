@@ -20,6 +20,15 @@ if __name__ == "__main__":
     title = "$~ FlappyBird Points: "
 
     env = Environment()
+
+    Background = pg.transform.scale(pg.image.load("sprites/background-day.png").convert(), (WIDTH, HEIGHT))
+    Ground = pg.transform.scale_by(pg.image.load("sprites/base.png").convert(), WIDTH / 336)
+    Bird = [
+        pg.transform.scale_by(pg.image.load("sprites/yellowbird-upflap.png").convert_alpha(), WIDTH // 15 / 17),
+        pg.transform.scale_by(pg.image.load("sprites/yellowbird-midflap.png").convert_alpha(), WIDTH // 15 / 17),
+        pg.transform.scale_by(pg.image.load("sprites/yellowbird-downflap.png").convert_alpha(), WIDTH // 15 / 17)
+    ]
+    Pipe = pg.transform.scale_by(pg.image.load("sprites/pipe-green.png").convert_alpha(), WIDTH // 4 / 52)
   
     vert_ticks, upd_time = pg.time.get_ticks(), time.perf_counter_ns()
     pause = True
@@ -51,32 +60,29 @@ if __name__ == "__main__":
 
                 if event.type == pg.KEYDOWN:
                     if event.key in (pg.K_SPACE, pg.K_UP):
-                    	pause = False
-                    	
-                    	if env.ground:
-                    		env = Environment()
-                    		pause = True
-                    	elif env.Bird.alive: env.Bird.vel = -HEIGHT
+                        pause = False
+                        
+                        if env.ground:
+                            env = Environment()
+                            pause = True
+                        elif env.Bird.alive:
+                            env.Bird.vel = -HEIGHT
 
             vert_ticks = pg.time.get_ticks()
 
             # drawing graphics
 
-            screen.fill((135, 206, 235))
-
+            screen.blit(Background, (0, 0))
             # Pipe 1
-            pg.draw.rect(screen, env.Pipe1.color, (env.Pipe1.x, env.Pipe1.height, env.Pipe1.width, HEIGHT - env.Pipe1.height))
-            pg.draw.rect(screen, env.Pipe1.color, (env.Pipe1.x, 0, env.Pipe1.width, env.Pipe1.height - env.Pipe1.gap))
-
+            screen.blit(Pipe, (env.Pipe1.x, env.Pipe1.height))
+            screen.blit(pg.transform.rotate(Pipe, 180), (env.Pipe1.x, env.Pipe1.height - env.Pipe1.gap - HEIGHT // 140 * 124))
             # Pipe 2
-            pg.draw.rect(screen, env.Pipe2.color, (env.Pipe2.x, env.Pipe2.height, env.Pipe2.width, HEIGHT - env.Pipe2.height))
-            pg.draw.rect(screen, env.Pipe2.color, (env.Pipe2.x, 0, env.Pipe2.width, env.Pipe2.height - env.Pipe2.gap))
-
+            screen.blit(Pipe, (env.Pipe2.x, env.Pipe2.height))
+            screen.blit(pg.transform.rotate(Pipe, 180), (env.Pipe2.x, env.Pipe2.height - env.Pipe2.gap - HEIGHT // 140 * 124))
             # Ground
-            pg.draw.rect(screen, env.ground_color, (0, env.ground_height, WIDTH, HEIGHT - env.ground_height))
-
+            screen.blit(Ground, (0, HEIGHT - Ground.get_size()[1]))
             # Bird (Player)
-            pg.draw.circle(screen, env.Bird.color, (env.Bird.x, env.Bird.height), env.Bird.radius)
+            screen.blit(pg.transform.rotate(Bird[env.Bird.state], max(-env.Bird.vel / 25, -90)), (env.Bird.x - env.Bird.radius, env.Bird.height - env.Bird.radius))
 
             # cheking keys
             check_pressed()
